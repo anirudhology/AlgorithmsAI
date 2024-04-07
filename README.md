@@ -1,2 +1,3 @@
 # AlgorithmsAI
-Implementations of common algorithms used in AI fields from scratch
+
+Implementations of common AI algorithms from scratch.
