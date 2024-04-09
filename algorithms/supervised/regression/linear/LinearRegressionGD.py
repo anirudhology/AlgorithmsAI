@@ -6,60 +6,45 @@ Linear Regression Algorithm using Gradient Descent
 
 
 class LinearRegressionGD:
-    def __init__(self, learning_rate=0.01, max_iterations=1000, tolerance=1e-4) -> None:
+    def __init__(self, learning_rate=0.001, epochs=1000):
         self.learning_rate = learning_rate
-        self.max_iterations = max_iterations
-        self.tolerance = tolerance
-        self.coefficients = None
-        self.intercept = None
-        self.cost_history = []
+        self.epochs = epochs
+        self.weights = None
+        self.bias = None
+        self.training_history = []
 
-    def fit(self, x, y):
-        """
-        Fit the linear regression model to the given data.
+    def fit(self, X, y):
+        n_samples, n_features = X.shape
+        self.weights = np.zeros(n_features)
+        self.bias = 0
 
-        :param x: features of the given data; array-like shape. Training data.
-        :param y: observed values; array-like shape. Observed output
-        """
-        # Add a column of ones to x for intercept term
-        x = np.c_[np.ones(x.shape[0]), x]
-
-        # Initialize coefficients and intercepts to a random value
-        self.coefficients = np.random.randn(x.shape[1])
-        self.intercept = np.random.randn()
-
-        # Perform Gradient Descent for max_iterations
-        for i in range(self.max_iterations):
-            # Compute predictions
-            y_predicted = np.dot(x, self.coefficients) + self.intercept
-
-            # Compute error
-            error = y_predicted - y
+        for _ in range(self.epochs):
+            # Predict values
+            y_predicted = self.predict(X)
+            # Reshape y to match y_predicted
+            y_predicted_reshaped = y_predicted.reshape(-1, 1)
 
             # Compute gradients
-            gradient_coefficients = 2 * np.dot(x.T, error) / len(y)
-            gradient_intercept = 2 * np.sum(error) / len(y)
+            dw = (1 / n_samples) * np.dot(X.T, (y_predicted_reshaped - y))
+            db = (1 / n_samples) * np.sum(y_predicted_reshaped - y)
 
-            # Update coefficients and intercepts for this iteration
-            self.coefficients -= self.learning_rate * gradient_coefficients
-            self.intercept -= self.learning_rate * gradient_intercept
+            # Reshape dw to match self.weights
+            dw_flat = dw.flatten()
 
-            # Compute cost for current iteration (MSE)
-            cost = np.mean(error ** 2)
-            self.cost_history.append(cost)
+            # Update parameters
+            self.weights -= self.learning_rate * dw_flat
+            self.bias -= self.learning_rate * db
 
-            # Check for convergence
-            if len(self.cost_history) > 1 and abs(cost - self.cost_history[-2]) < self.tolerance:
-                break
+            # Calculate cost (MSE)
+            cost = self.calculate_cost(X, y)
+            self.training_history.append(cost)
 
-    def predict(self, x):
-        """
-        Predict target value based on the given features and previously calculated
-        values of intercept and coefficients
-        :param x: Input features
-        :return: y_predicted - predicted value of target
-        """
-        # Add a column of ones for intercept term
-        x = np.c_[np.ones(x.shape[0]), x]
+    def predict(self, X):
+        return np.dot(X, self.weights) + self.bias
 
-        return np.dot(x, self.coefficients) + self.intercept
+    def calculate_cost(self, X, y):
+        n_samples = len(X)
+        prediction = self.predict(X)
+        error = prediction - y
+        cost = np.sum(error ** 2) / (2 * n_samples)
+        return cost
